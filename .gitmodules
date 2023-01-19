@@ -2,3 +2,7 @@
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
 
+[submodule "lib/dss-exec-lib"]
+	path = lib/dss-exec-lib
+	url = https://github.com/makerdao/dss-exec-lib
+	branch = v0.0.9
