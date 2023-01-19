@@ -6,3 +6,6 @@
 	path = lib/dss-exec-lib
 	url = https://github.com/makerdao/dss-exec-lib
 	branch = v0.0.9
+[submodule "lib/hats-protocol"]
+	path = lib/hats-protocol
+	url = https://github.com/Hats-Protocol/hats-protocol
