@@ -1,2 +1,3 @@
-# solidity-template
-Template repo for solidity projects
+# MakerDAO Hats Spells
+
+Spells for setting up and using Hats Protocol within MakerDAO
