@@ -7,9 +7,11 @@ import "hats-protocol/Interfaces/IHats.sol";
 import { DSPauseProxy } from "ds-pause/pause.sol";
 
 contract DssSpellAction is DssAction {
-    // DSPauseProxy public pauseHatsProxy;
+    DSPauseProxy public pauseHatsProxy;
+
     // https://etherscan.io/address/0xbe8e3e3618f7474f8cb1d074a26affef007e98fb
     // DSPauseProxy public constant pauseProxy = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
+
     IHats public hats;
 
     constructor(IHats _hats) {
@@ -32,24 +34,24 @@ contract DssSpellAction is DssAction {
     //   The DssExec function will call this subject to the officeHours limiter
     //   By keeping this function public we allow simulations of `execute()` on the actions outside of the cast time.
     function actions() public override {
-        // // 1. deploy a new DSPauseProxy
-        // pauseHatsProxy = new DSPauseProxy();
-        /* NOTE
-        * Actually, I don't think creating a separate proxy is going to work. DSPause can * only execute calls out of its pre-designated proxy, which executes 
-        * delegatecalls. Therefore,
-        *   A. We can't force DSPause to use a different proxy, and
-        *   B. Having the pause proxy use another proxy won't do anything, since the 
-        *      second proxy will will just be forwarding the pause proxy's delegatecall, 
-        *      ie still executing within the pause proxy's storage context.
-        * So, I think we need to just mint the tophat to the existing pause proxy
-        */
+        // 1. deploy a new DSPauseProxy that will be owned by the original pauseProxy
+        pauseHatsProxy = new DSPauseProxy(); // owner == msg.sender == pauseProxy
 
         // 2. mint a tophat to the pause proxy, which is the msg.sender
         hats.mintTopHat(
-            msg.sender, // TODO check that this will actually be the pause roxy
+            pauseHatsProxy,
             _details, // QUESTION what details should we enter?
             _imageURI // QUESTION what image, if any, should be used for MakerDAO hats?
         );
+
+        /* Subsequent executive spells operating under this tophat will need to use the 
+         * following pattern:
+         *
+         *  1. Craft an abi-encoded tx to be called against Hats.sol
+         *  2. Call pauseHatsProxy.exec(usr: Hats.sol, fax: the_bytes_from_1);
+         * 
+         * This will execute the Hats tx from the execution context of the pauseHatsProxy.
+         */
     }
 }
 
