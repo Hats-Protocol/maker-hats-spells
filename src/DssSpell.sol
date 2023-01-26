@@ -7,8 +7,6 @@ import { IHats } from "hats-protocol/Interfaces/IHats.sol";
 import { DSPauseProxy } from "ds-pause/pause.sol";
 
 contract DssSpellAction is DssAction {
-    DSPauseProxy public pauseHatsProxy;
-
     // https://etherscan.io/address/0xbe8e3e3618f7474f8cb1d074a26affef007e98fb
     // DSPauseProxy public constant pauseProxy = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
 
@@ -51,7 +49,7 @@ contract DssSpellAction is DssAction {
          */
 
         // deploy a new DSPauseProxy that will be owned by the original pauseProxy
-        pauseHatsProxy = new DSPauseProxy(); // owner == msg.sender == pauseProxy
+        DSPauseProxy pauseHatsProxy = new DSPauseProxy(); // owner == msg.sender == pauseProxy
 
         // mint a tophat to the pause proxy, which is the msg.sender
         hats.mintTopHat(
