@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "dss-exec-lib/DssExec.sol";
-import "dss-exec-lib/DssAction.sol";
-import "hats-protocol/Interfaces/IHats.sol";
+import { DssExec } from "dss-exec-lib/DssExec.sol";
+import { DssAction } from "dss-exec-lib/DssAction.sol";
+import { IHats } from "hats-protocol/Interfaces/IHats.sol";
 import { DSPauseProxy } from "ds-pause/pause.sol";
 
 contract DssSpellAction is DssAction {
@@ -12,14 +12,14 @@ contract DssSpellAction is DssAction {
     // https://etherscan.io/address/0xbe8e3e3618f7474f8cb1d074a26affef007e98fb
     // DSPauseProxy public constant pauseProxy = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
 
-    IHats public hats;
+    IHats public constant hats;
 
     constructor(IHats _hats) {
         hats = _hats;
     }
 
-    // QUESTION: Should office hours be on?
     function officeHours() public override returns (bool) {
+        // TODO: Decide whether office hours should be on
         return false;
     }
 
@@ -34,24 +34,32 @@ contract DssSpellAction is DssAction {
     //   The DssExec function will call this subject to the officeHours limiter
     //   By keeping this function public we allow simulations of `execute()` on the actions outside of the cast time.
     function actions() public override {
-        // 1. deploy a new DSPauseProxy that will be owned by the original pauseProxy
-        pauseHatsProxy = new DSPauseProxy(); // owner == msg.sender == pauseProxy
+        /* For security & separation of concerns reasons, we create a new proxy to wear 
+         * the tophat. The new proxy is owned/controlled by the original pauseProxy.
 
-        // 2. mint a tophat to the pause proxy, which is the msg.sender
-        hats.mintTopHat(
-            pauseHatsProxy,
-            _details, // QUESTION what details should we enter?
-            _imageURI // QUESTION what image, if any, should be used for MakerDAO hats?
-        );
-
-        /* Subsequent executive spells operating under this tophat will need to use the 
-         * following pattern:
+         * Since minting a tophat can be done on behalf of another contract, the present 
+         * spell is straightforward and can be executed within the context of the 
+         * pauseProxy.
+         * 
+         * However, subsequent executive spells operating under this tophat will need to * executed from the context of the new proxy, which will require using something 
+         * like the following pattern of spell actions:
          *
-         *  1. Craft an abi-encoded tx to be called against Hats.sol
-         *  2. Call pauseHatsProxy.exec(usr: Hats.sol, fax: the_bytes_from_1);
+         *  1. Generate the abi-encoded bytes for a tx to be called against Hats.sol
+         *  2. Call `pauseHatsProxy.exec(usr: Hats.sol, fax: the_bytes_from_1);`
          * 
          * This will execute the Hats tx from the execution context of the pauseHatsProxy.
          */
+
+        // deploy a new DSPauseProxy that will be owned by the original pauseProxy
+        pauseHatsProxy = new DSPauseProxy(); // owner == msg.sender == pauseProxy
+
+        // mint a tophat to the pause proxy, which is the msg.sender
+        hats.mintTopHat(
+            pauseHatsProxy,
+            // the tophat's details and imageURI can both be updated later
+            _details, // TODO MakerDAO to decide which details to use initially
+            _imageURI // TODO MakerDAO to decide which image to use initially
+        );
     }
 }
 
