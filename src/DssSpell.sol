@@ -51,7 +51,7 @@ contract DssSpellAction is DssAction {
         // deploy a new DSPauseProxy that will be owned by the original pauseProxy
         DSPauseProxy pauseHatsProxy = new DSPauseProxy(); // owner == msg.sender == pauseProxy
 
-        // mint a tophat to the pause proxy, which is the msg.sender
+        // mint a tophat to the pauseHatsProxy
         hats.mintTopHat(
             pauseHatsProxy,
             // the tophat's details and imageURI can both be updated later
