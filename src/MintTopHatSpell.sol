@@ -6,11 +6,11 @@ import { DssAction } from "dss-exec-lib/DssAction.sol";
 import { IHats } from "hats-protocol/Interfaces/IHats.sol";
 import { DSPauseProxy } from "ds-pause/pause.sol";
 
-contract DssSpellAction is DssAction {
+contract MintTopHatAction is DssAction {
     // https://etherscan.io/address/0xbe8e3e3618f7474f8cb1d074a26affef007e98fb
     // DSPauseProxy public constant pauseProxy = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
 
-    IHats public constant hats;
+    IHats public immutable hats;
 
     constructor(IHats _hats) {
         hats = _hats;
@@ -61,6 +61,6 @@ contract DssSpellAction is DssAction {
     }
 }
 
-contract DssSpell is DssExec {
+contract MintTopHatSpell is DssExec {
     constructor(IHats _hats) DssExec(block.timestamp + 30 days, address(new DssSpellAction(_hats))) { }
 }
