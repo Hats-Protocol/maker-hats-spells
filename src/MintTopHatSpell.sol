@@ -3,18 +3,19 @@ pragma solidity ^0.8.13;
 
 import { DssExec } from "dss-exec-lib/DssExec.sol";
 import { DssAction } from "dss-exec-lib/DssAction.sol";
-import { IHats } from "hats-protocol/Interfaces/IHats.sol";
 import { DSPauseProxy } from "ds-pause/pause.sol";
 
-contract MintTopHatAction is DssAction {
+interface HatsLike {
+    function mintTopHat(address _target, string memory _details, string memory _imageURI)
+        external
+        returns (uint256 topHatId);
+}
+
+contract DssSpellAction is DssAction {
     // https://etherscan.io/address/0xbe8e3e3618f7474f8cb1d074a26affef007e98fb
     // DSPauseProxy public constant pauseProxy = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
 
-    IHats public immutable hats;
-
-    constructor(IHats _hats) {
-        hats = _hats;
-    }
+    address public constant HATS = address(0); // TODO: fill with the hats contract instance;
 
     function officeHours() public override returns (bool) {
         // TODO: Decide whether office hours should be on
@@ -32,6 +33,8 @@ contract MintTopHatAction is DssAction {
     //   The DssExec function will call this subject to the officeHours limiter
     //   By keeping this function public we allow simulations of `execute()` on the actions outside of the cast time.
     function actions() public override {
+        // https://vote.makerdao.com/polling/TODO#poll-detail TODO: UPDATE THIS ONCE THERE'S A POLL
+
         /* For security & separation of concerns reasons, we create a new proxy to wear 
          * the tophat. The new proxy is owned/controlled by the original pauseProxy.
 
@@ -51,16 +54,16 @@ contract MintTopHatAction is DssAction {
         // deploy a new DSPauseProxy that will be owned by the original pauseProxy
         DSPauseProxy pauseHatsProxy = new DSPauseProxy(); // owner == msg.sender == pauseProxy
 
-        // mint a tophat to the pauseHatsProxy
-        hats.mintTopHat(
-            pauseHatsProxy,
+        // mint a tophat to the hatsPauseProxy
+        uint256 topHatId = HatsLike(HATS).mintTopHat(
+            address(hatsPauseProxy),
             // the tophat's details and imageURI can both be updated later
-            _details, // TODO MakerDAO to decide which details to use initially
-            _imageURI // TODO MakerDAO to decide which image to use initially
+            "", // TODO MakerDAO to decide which details to use initially
+            "" // TODO MakerDAO to decide which image to use initially
         );
     }
 }
 
-contract MintTopHatSpell is DssExec {
-    constructor(IHats _hats) DssExec(block.timestamp + 30 days, address(new DssSpellAction(_hats))) { }
+contract DssSpell is DssExec {
+    constructor() DssExec(block.timestamp + 30 days, address(new DssSpellAction())) { }
 }

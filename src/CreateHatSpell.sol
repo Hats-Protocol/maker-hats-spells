@@ -3,20 +3,34 @@ pragma solidity ^0.8.13;
 
 import { DssExec } from "dss-exec-lib/DssExec.sol";
 import { DssAction } from "dss-exec-lib/DssAction.sol";
-import { IHats } from "hats-protocol/Interfaces/IHats.sol";
-import { DSPauseProxy } from "ds-pause/pause.sol";
 
-contract CreateHatAction is DssAction {
-    DSPauseProxy public immutable pauseHatsProxy;
+interface DSPauseProxyLike {
+    function exec(address usr, bytes memory fax) external returns (bytes memory out);
+}
 
-    IHats public immutable hats;
-    uint256 public immutable tophat;
+interface HatsLike {
+    function createHat(
+        uint256 _admin,
+        string memory _details,
+        uint32 _maxSupply,
+        address _eligibility,
+        address _toggle,
+        bool _mutable,
+        string memory _imageURI
+    ) external returns (uint256 newHatId);
+}
 
-    constructor(IHats _hats, DSPauseProxy _pauseHatsProxy, uint256 _tophat) {
-        hats = _hats;
-        pauseHatsProxy = _pauseHatsProxy;
-        tophat = _tophat;
-    }
+contract DssSpellAction is DssAction {
+    address public constant HATS = address(0); // TODO: fill with the hats contract instance
+    address public constant HATS_PAUSE_PROXY = address(0); // TODO: fill with the hats pause proxy instance
+    uint256 public constant TOP_HAT_ID = 0; // TODO: fill with the top hat ID created before
+
+    string public HAT_DETAILS = ""; // TODO: fill with the details of the new hat
+    uint32 public constant HAT_MAX_SUPPLY = 0; // TODO: fill with the max supply of the new hat
+    address public constant HAT_ELIGIBILITY = address(0); // TODO: fill with the eligibility module address of the new hat
+    address public constant HAT_TOGGLE = address(0); // TODO: fill with the toggle module address of the new hat
+    bool public constant HAT_MUTABLE = false; // TODO: fill with the mutability of the new hat
+    string public HAT_IMAGE_URI = ""; // TODO: fill with the imageURI of the new hat
 
     function officeHours() public override returns (bool) {
         // TODO: Decide whether office hours should be on
@@ -46,33 +60,24 @@ contract CreateHatAction is DssAction {
          * 
          * This will execute the Hats tx from the execution context of the pauseHatsProxy.
          */
-        // 0. define new hat parameters
-        string memory details;
-        uint32 maxSupply;
-        address eligibility;
-        address toggle;
-        bool mutable_;
-        string memory imageURI;
 
         // 1. generate the abi-encoded bytes for the createHat transaction to be called against Hats.sol
         bytes memory fax = abi.encodeWithSelector(
-            IHats.CreateHat.selector,
-            tophat, // admin
-            details,
-            maxSupply,
-            eligibility,
-            toggle,
-            mutable_,
-            imageURI
+            HatsLike(0).createHat.selector,
+            TOP_HAT_ID, // admin
+            HAT_DETAILS,
+            HAT_MAX_SUPPLY,
+            HAT_ELIGIBILITY,
+            HAT_ELIGIBILITY,
+            HAT_MUTABLE,
+            HAT_IMAGE_URI
         );
 
-        // 2. pass the fax as a payload to pauseHatsProxy
-        pauseHatsProxy.exec(hats, fax);
+        // 2. pass the fax as a payload to pauseHatsProxy to execute against Hats.sol
+        DSPauseProxyLike(HATS_PAUSE_PROXY).exec(hats, fax);
     }
 }
 
-contract CreateHatSpell is DssExec {
-    constructor(IHats _hats, DSPauseProxy _pauseHatsProxy, uint256 _tophat)
-        DssExec(block.timestamp + 30 days, address(new DssSpellAction(_hats, _pauseHatsProxy, _tophat)))
-    { }
+contract DssSpell is DssExec {
+    constructor() DssExec(block.timestamp + 30 days, address(new DssSpellAction())) { }
 }
